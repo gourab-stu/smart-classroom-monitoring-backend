@@ -172,3 +172,11 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# VS Code workspace settings
+.vscode/
+
+*.jpg
+*.jpeg
+*.webp
+*.png
