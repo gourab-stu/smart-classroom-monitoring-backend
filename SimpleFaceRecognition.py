@@ -13,7 +13,7 @@ def capture_face(cap: cv2.VideoCapture, filename: str) -> bool:
         (ret, frame) = cap.read()
 
         # in case of faulty frame
-        if ret == False:
+        if ret is False:
             print("Failed to capture frame")
 
         # converting from opencv's BGR format to face_recognition's RGB format
@@ -47,7 +47,7 @@ def capture_face(cap: cv2.VideoCapture, filename: str) -> bool:
 def detect_faces_live(cap: cv2.VideoCapture, folder_name_with_known_faces: str) -> None:
     # Load known face encodings
     # List all images in folder
-    paths = list(Path(f"{folder_name_with_known_faces}").glob("*"))
+    paths = list(Path(f"{folder_name_with_known_faces}").glob("*.jpg"))
     known_face_encodings = []
 
     for img_path in paths:
