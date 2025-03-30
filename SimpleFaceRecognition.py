@@ -1,10 +1,20 @@
+import os
 import cv2
 import face_recognition as fr
-from pathlib import Path
+from pymongo.mongo_client import MongoClient
+from dotenv import load_dotenv
+
+load_dotenv("./.env")
+
+uri = os.getenv("MONGODB_URI")
+
+client = MongoClient(uri)
+db = client["smart-classroom-monitoring"]
+collection = db["face-encodings"]
 
 
 def capture_face(cap: cv2.VideoCapture, filename: str) -> bool:
-    text = "Press 'Esc' key to capture face"
+    text = "Press spacebar to capture face"
     color = (0, 255, 0)
     thickness = 2
     # processing video feed
@@ -37,29 +47,29 @@ def capture_face(cap: cv2.VideoCapture, filename: str) -> bool:
         cv2.imshow("Video", frame)
 
         # if 'Esc' key is pressed, write the frame to disk and stop
-        if cv2.waitKey(1) == 27:
+        if cv2.waitKey(1) == 32:
+            face_encoding = fr.face_encodings(frame_rgb)[0]
+            face_encoding_list = face_encoding.tolist()
+            data = {
+                "name": f"{filename.split('.')[0]}",
+                "encoding": face_encoding_list
+            }
+            collection.insert_one(data)
+            print("face stored in mongodb")
             cv2.imwrite(f"{filename}", face)
             break
 
     return True
 
 
-def detect_faces_live(cap: cv2.VideoCapture, folder_name_with_known_faces: str) -> None:
-    # Load known face encodings
-    # List all images in folder
-    paths = list(Path(f"{folder_name_with_known_faces}").glob("*.jpg"))
+def detect_faces_live(cap: cv2.VideoCapture) -> None:
     known_face_encodings = []
+    known_names = []
 
-    for img_path in paths:
-        img = cv2.imread(str(img_path))
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        encodings = fr.face_encodings(img_rgb)
-
-        if encodings:  # Ensure encodings are found
-            known_face_encodings.append(encodings[0])
-
-    # Extract file names (without extension)
-    known_names = [path.stem for path in paths]
+    for data in collection.find({}):
+        if data:  # Ensure data is found
+            known_names.append(data["name"])
+            known_face_encodings.append(data["encoding"])
 
     while True:
         ret, frame = cap.read()
