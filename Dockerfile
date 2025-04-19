@@ -6,7 +6,6 @@ WORKDIR /smart-classroom-monitoring-backend
 # Copy project files
 COPY app/ /smart-classroom-monitoring-backend/
 COPY requirements.txt /smart-classroom-monitoring-backend/
-COPY .env /smart-classroom-monitoring-backend/
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
