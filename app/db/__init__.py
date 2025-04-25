@@ -6,3 +6,6 @@ dbname = os.getenv('DATABASE_NAME')
 
 client = MongoClient(uri)
 database = client[dbname]
+face_encodings_collection = database['face-encodings']
+
+print(f"connected to database, HOST: {client.address}")
