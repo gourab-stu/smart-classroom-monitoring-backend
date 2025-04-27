@@ -22,14 +22,13 @@ def detect_face_info(frame: MatLike, known_faces: list[dict]) -> Dict:
     known_names = [f['name'] for f in known_faces if f]
 
     # just compare the first detected face for speed
-    matches = fr.compare_faces(known_face_encodings, face_encodings[0])
+    distances = fr.face_distance(known_face_encodings, face_encodings[0])
     name = "Unknown"
-    if True in matches:
-        known_names_set = set(known_names)
-        known_names_dict = dict.fromkeys(known_names_set, 0)
-        for index in range(len(matches)):
-            known_names_dict[known_names[index]] += int(matches[index])
-        name = max(known_names_dict, key=known_names_dict.get)
+    min_distance = min(distances)
+    threshold = 5.0
+    if min_distance < threshold:
+        matched_idx = distances.tolist().index(min_distance)
+        name = known_names[matched_idx]
 
     top, right, bottom, left = face_locations[0]
     return {

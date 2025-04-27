@@ -1,30 +1,23 @@
-import json
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from ...db.face_recognition import crud
-from ...modules import parser
-from ...modules import face_recognition_utils as fru
+from fastapi import APIRouter, UploadFile, File
+from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/student", tags=["Auth - Student"])
 
 
-@router.websocket("/register")
-async def register_student(websocket: WebSocket):
+@router.post("/register")
+async def register_student():
     pass
 
 
-@router.websocket("/login")
-async def login_student(websocket: WebSocket):
-    await websocket.accept()
-    known_faces = crud.load_known_faces()
-    try:
-        while True:
-            bytes = await websocket.receive_bytes()
-            frame = parser.to_frame(data=bytes)
+@router.post("/login")
+async def login_student(file: UploadFile = File(...)):
+    # Simulate processing time (e.g., face recognition)
 
-            if frame is None:
-                continue
+    # You can even print file.filename if you want
+    print(f"Received file: {file.filename}")
 
-            detection_result = fru.detect_face_info(frame, known_faces)
-            await websocket.send_text(json.dumps(detection_result))
-    except WebSocketDisconnect:
-        print("Client disconnected")
+    # Respond with dummy login success
+    return JSONResponse(content={
+        "login": True,
+        "studentId": "0123456789abcdef"
+    })
