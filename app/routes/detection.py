@@ -1,7 +1,6 @@
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from ..db.face_recognition import crud
-from ..modules import parser
 from ..modules import face_recognition_utils as fru
 
 router = APIRouter(prefix="/detection", tags=["Face Detection"])
@@ -14,7 +13,7 @@ async def login_student(websocket: WebSocket):
     try:
         while True:
             bytes = await websocket.receive_bytes()
-            frame = parser.to_frame(data=bytes)
+            frame = fru.to_frame(data=bytes)
 
             if frame is None:
                 continue

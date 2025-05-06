@@ -2,5 +2,5 @@ opencv-python
 face_recognition
 pymongo
 python-dotenv
-fastapi
+fastapi[standard]
 uvicorn[standard]
