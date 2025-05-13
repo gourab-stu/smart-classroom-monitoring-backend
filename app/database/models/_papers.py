@@ -1,32 +1,21 @@
-from pydantic import BaseModel, Field
-from typing import Optional
-from bson import ObjectId
+from beanie import Document
+from pydantic import Field
+from pymongo import ASCENDING, IndexModel
 
 
-class PyObjectId(ObjectId):
-    @classmethod
-    def get_validators(cls):
-        yield cls.validate
+class Paper(Document):
+    name: str = Field(
+        default=...,
+        description="Name of the paper"
+    )
+    code: str = Field(
+        default=...,
+        description="Code of the paper in block letters",
+        pattern=r"[A-Z0-9]*"
+    )
 
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
-        return ObjectId(v)
-
-
-class PaperModel(BaseModel):
-    id: Optional[PyObjectId] = Field(
-        default_factory=PyObjectId, alias="_id")
-    name: str = Field(..., description="Name of the paper")
-    code: str = Field(..., description="Code of the paper")
-
-    class Config:
-        allow_population_by_field_name = True
-        json_encoders = {ObjectId: str}
-        schema_extra = {
-            "example": {
-                "name": "Design and Analysis of Algorithms",
-                "code": "CMSACOR11"
-            }
-        }
+    class Settings:
+        name: str = "papers"
+        indexes: list[IndexModel] = [
+            IndexModel(keys=[("code", ASCENDING)], unique=True)
+        ]

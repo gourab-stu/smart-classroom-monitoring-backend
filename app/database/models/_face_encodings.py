@@ -1,39 +1,19 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List
-from bson import ObjectId
+from typing import List
+from beanie import Document, Link
+from pydantic import Field
 
-# Helper to support ObjectId validation
-
-
-class PyObjectId(ObjectId):
-    @classmethod
-    def get_validators(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
-        return ObjectId(v)
+from app.database.models._students import Student
 
 
-class FaceEncodingModel(BaseModel):
-    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
-    student_id: PyObjectId = Field(..., description="ObjectId of the student")
-    encoding: List[float] = Field(..., description="128-d face encoding")
+class FaceEncoding(Document):
+    student_id: Link[Student] = Field(
+        default=...,
+        description="ObjectId of the student whose face it is"
+    )
+    encoding: List[float] = Field(
+        default=...,
+        description="Face encoding of the student in readable format which is a list of 128 floating point numbers"
+    )   # Length will be validated at application level
 
-    @field_validator("encoding")
-    def validate_encoding_length(cls, v):
-        if len(v) != 128:
-            raise ValueError("Encoding must be a list of 128 float values")
-        return v
-
-    class Config:
-        allow_population_by_field_name = True
-        json_encoders = {ObjectId: str}
-        schema_extra = {
-            "example": {
-                "student_id": "64fa3c8e9a5c3e9b1e3f024a",
-                "encoding": [0.123, 0.456, ..., 0.789]  # 128 floats
-            }
-        }
+    class Settings:
+        name: str = "face_encodings"

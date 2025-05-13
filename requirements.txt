@@ -1,6 +1,9 @@
 opencv-python
 face_recognition
+pydantic
 pymongo
-python-dotenv
+motor
+beanie
 fastapi[standard]
 uvicorn[standard]
+python-dotenv

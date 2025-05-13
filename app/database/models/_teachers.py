@@ -1,37 +1,27 @@
-from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
-from bson import ObjectId
+from beanie import Document, Link
+from pydantic import EmailStr, Field
+from pymongo import ASCENDING, IndexModel
 
-# Helper to support ObjectId validation in Pydantic
-
-
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
-        return ObjectId(v)
+from app.database.models._papers import Paper
 
 
-class TeacherModel(BaseModel):
-    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
-    name: str
-    email: EmailStr
-    paper: List[PyObjectId] = Field(default_factory=list)
-    tests: List[PyObjectId] = Field(default_factory=list)
+class Teacher(Document):
+    name: str = Field(
+        default=...,
+        description="Name is required and must be a string"
+    )
+    email: EmailStr = Field(
+        default=...,
+        description="Email is required and must be valid"
+    )
+    paper: Optional[List[Link[Paper]]] = Field(
+        default_factory=list,
+        description="Optional list of ObjectIds from papers collection"
+    )
 
-    class Config:
-        allow_population_by_field_name = True
-        json_encoders = {ObjectId: str}
-        schema_extra = {
-            "example": {
-                "name": "Dr. Jane Smith",
-                "email": "jane.smith@example.com",
-                "paper": ["60c72b2f4f1a4e3f8c76f0b1"],
-                "tests": []
-            }
-        }
+    class Settings:
+        name: str = "teachers"
+        indexes: list[IndexModel] = [
+            IndexModel(keys=[("email", ASCENDING)], unique=True)
+        ]

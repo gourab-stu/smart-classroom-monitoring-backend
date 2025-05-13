@@ -1,49 +1,38 @@
-from pydantic import BaseModel, Field, HttpUrl
+from datetime import datetime
 from typing import List, Optional
-from bson import ObjectId
+from beanie import Document, Link
+from pydantic import BaseModel, Field, HttpUrl
 
-# Custom ObjectId validator
-
-
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
-        return ObjectId(v)
-
-# Submissions schema
+from app.database.models._students import Student
+from app.database.models._teachers import Teacher
 
 
-class SubmissionModel(BaseModel):
-    submitted_by: PyObjectId
-    upload_link: HttpUrl
+class Submission(BaseModel):
+    submitted_by: Link[Student] = Field(
+        default=...,
+        description="Reference to a student"
+    )
+    upload_link: HttpUrl = Field(
+        default=...,
+        description="Must be a valid URL"
+    )
 
-# Assignment schema
 
+class Assignment(Document):
+    name: str = Field(
+        default=...,
+        description="Assignment name must be a string"
+    )
+    created_by: Link[Teacher] = Field(
+        default=...,
+        description="Must be a reference to a teacher"
+    )
+    creation_date: datetime
+    due_date: datetime
+    submissions: Optional[List[Submission]] = Field(
+        default_factory=list,
+        description="List of student submissions"
+    )
 
-class AssignmentModel(BaseModel):
-    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
-    name: str
-    created_by: PyObjectId
-    submissions: List[SubmissionModel] = Field(default_factory=list)
-
-    class Config:
-        allow_population_by_field_name = True
-        json_encoders = {ObjectId: str}
-        schema_extra = {
-            "example": {
-                "name": "Assignment 1",
-                "created_by": "60c72b2f4f1a4e3f8c76f0b1",
-                "submissions": [
-                    {
-                        "submitted_by": "60c73d9e2f1a4e3f8c76fabc",
-                        "upload_link": "https://res.cloudinary.com/demo/image/upload/v12345/assignment.pdf"
-                    }
-                ]
-            }
-        }
+    class Settings:
+        name: str = "assignments"

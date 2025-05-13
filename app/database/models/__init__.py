@@ -1,11 +1,18 @@
-from ._assignments import AssignmentModel
-from ._attendances import AttendanceModel
-from ._face_encodings import FaceEncodingModel
-from ._otps import OTPModel
-from ._papers import PaperModel
-from ._routines import RoutineModel
-from ._students import StudentModel
-from ._teachers import TeacherModel
+from app.database.models._assignments import Assignment
+from app.database.models._face_encodings import FaceEncoding
+from app.database.models._otps import OTP
+from app.database.models._papers import Paper
+from app.database.models._routines import Routine
+from app.database.models._students import Student
+from app.database.models._teachers import Teacher
 
-all = ["AssignmentModel", "AttendanceModel", "FaceEncodingModel",
-       "OTPModel", "PaperModel", "RoutineModel", "StudentModel", "TeacherModel"]
+
+__all__: list[str] = [
+    "Assignment",
+    "FaceEncoding",
+    "OTP",
+    "Paper",
+    "Routine",
+    "Student",
+    "Teacher"
+]
