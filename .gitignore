@@ -176,7 +176,7 @@ cython_debug/
 .pypirc
 
 # VS Code workspace settings
-.vscode/
+# .vscode/
 
 *.jpg
 *.jpeg
