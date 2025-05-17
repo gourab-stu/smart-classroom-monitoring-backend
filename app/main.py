@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.beanie_init import close_beanie_db, init_beanie_db
-from app.api import router
+from app.routes import router
 
 
 load_dotenv(dotenv_path='.env.development')

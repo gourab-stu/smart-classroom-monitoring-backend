@@ -6,7 +6,7 @@ from app.schemas.auth import OTPRequestSchema, OTPVerifySchema
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-@router.post("/request-otp")
+@router.post(path="/request-otp")
 async def request_otp(data: OTPRequestSchema):
     pass
 
