@@ -1,9 +1,29 @@
+# Image Processing and Face Recognition
 opencv-python
 face_recognition
+
+# Data Validation Library
 pydantic
-pymongo
+
+# MongoDB (async ODM)
 motor
 beanie
+
+# PostgreSQL (async)
+asyncpg
+sqlalchemy[asyncio]
+alembic
+
+# Redis
+aioredis
+
+# Email & SMS
+aiosmtplib
+twilio
+
+# Web Framework
 fastapi[standard]
 uvicorn[standard]
+
 python-dotenv
+email-validator

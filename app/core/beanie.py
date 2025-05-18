@@ -1,25 +1,25 @@
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from app.core import db_name, mongo_uri
-from app.database.models import OTP, Assignment, FaceEncoding, Paper, Routine, Student, Teacher
+from app.core import MONGO_URL, MONGO_DATABASE_NAME
+from app.database.models.mongodb import *
 
 client: AsyncIOMotorClient | None = None
 
 
 async def init_beanie_db() -> None:
     global client
-    client = AsyncIOMotorClient(host=mongo_uri)
+    client = AsyncIOMotorClient(host=MONGO_URL)
     await init_beanie(
-        database=client[str(object=db_name)],
+        database=client[str(object=MONGO_DATABASE_NAME)],
         document_models=[
             Assignment,
+            Class,
             FaceEncoding,
-            OTP,
-            Paper,
-            Routine,
-            Student,
-            Teacher
+            Lecture,
+            StudentProfile,
+            Submission,
+            TeacherProfile
         ]
     )
     print(f"database connected to {client.HOST} via port {client.PORT}")
@@ -29,3 +29,9 @@ async def close_beanie_db() -> None:
     global client
     if client:
         client.close()
+
+
+__all__ = [
+    "init_beanie_db",
+    "close_beanie_db"
+]
