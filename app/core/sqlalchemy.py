@@ -2,14 +2,14 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
-from app.core import POSTGRES_URL
+from app.core import POSTGRES_URI
 
 
 Base = declarative_base()
 
 # Create the async engine
 engine: AsyncEngine = create_async_engine(
-    url=POSTGRES_URL,  # e.g. "postgresql+asyncpg://user:pass@localhost/db"
+    url=POSTGRES_URI,  # e.g. "postgresql+asyncpg://user:pass@localhost/db"
     echo=False,
     future=True
 )

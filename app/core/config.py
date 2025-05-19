@@ -1,8 +1,8 @@
 import os
 
 
-POSTGRES_URL: str = str(object=os.getenv(key="POSTGRES_URL"))
-MONGO_URL: str = str(object=os.getenv(key="MONGO_URL"))
+POSTGRES_URI: str = str(object=os.getenv(key="POSTGRES_URI"))
+MONGO_URI: str = str(object=os.getenv(key="MONGO_URI"))
 MONGO_DATABASE_NAME: str = str(object=os.getenv(key="MONGO_DATABASE_NAME"))
 REDIS_HOST: str = str(object=os.getenv(key="REDIS_HOST"))
 REDIS_PORT: str = str(object=os.getenv(key="REDIS_PORT"))

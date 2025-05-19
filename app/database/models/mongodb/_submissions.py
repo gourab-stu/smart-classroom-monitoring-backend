@@ -1,40 +1,15 @@
-# from datetime import datetime
-# from typing import List
-
-# from beanie import Document, Link
-# from pydantic import Field
-
-# from app.database.models import Routine, Student
-
-
-# class Attendance(Document):
-#     date_of_class: datetime = Field(
-#         default=...,
-#         description="Date of the class taken"
-#     )
-#     class_id: Link[Routine] = Field(
-#         default=...,
-#         description="Class id from the routines collections"
-#     )
-#     present: List[Link[Student]] = Field(
-#         default=...,
-#         description="ObjectIds of the students who were present at that class"
-#     )
-
-#     class Settings:
-#         name: str = "attendances"
-
-
-# submission.py
 from datetime import datetime
-from beanie import Document, Link
+from typing import List
+from beanie import Document
 
-from app.database.models.mongodb._assignments import _assignment
-from app.database.models.mongodb._student_profiles import _student_profile
+from bson import ObjectId
 
 
 class _submission(Document):
-    assignment_id: Link[_assignment]
+    assignment_id: ObjectId
+    student_id: ObjectId
     submitted_at: datetime
-    student_id: Link[_student_profile]
-    upload_url: str
+    upload_url: List[str]
+
+    class Config:
+        arbitrary_types_allowed = True

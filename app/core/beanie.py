@@ -1,7 +1,7 @@
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from app.core import MONGO_URL, MONGO_DATABASE_NAME
+from app.core import MONGO_URI, MONGO_DATABASE_NAME
 from app.database.models.mongodb import *
 
 client: AsyncIOMotorClient | None = None
@@ -9,7 +9,7 @@ client: AsyncIOMotorClient | None = None
 
 async def init_beanie_db() -> None:
     global client
-    client = AsyncIOMotorClient(host=MONGO_URL)
+    client = AsyncIOMotorClient(host=MONGO_URI)
     await init_beanie(
         database=client[str(object=MONGO_DATABASE_NAME)],
         document_models=[

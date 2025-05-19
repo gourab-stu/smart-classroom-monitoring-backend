@@ -1,13 +1,13 @@
-from app.core.beanie import *
 from app.core.config import *
+from app.core.beanie import *
 from app.core.redis import *
 from app.core.sqlalchemy import *
 
 
 __all__: list[str] = [
-    "MONGO_URL",
+    "MONGO_URI",
     "SMTP_USERNAME",
-    "POSTGRES_URL",
+    "POSTGRES_URI",
     "REDIS_HOST",
     "REDIS_PASSWORD",
     "REDIS_PORT",
