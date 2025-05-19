@@ -11,11 +11,11 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 async def request_otp_endpoint(req: Request):
     data = await req.json()
     otpReq = OTPRequestSchema(email=data['email'])
-    return await request_otp(otpReq)
+    return await request_otp(data=otpReq)
 
 
 @router.post(path="/verify-otp")
 async def verify_otp_endpoint(req: Request):
     data = await req.json()
     otpVerify = OTPVerifySchema(email=data['email'], otp=data['otp'])
-    return await verify_otp(otpVerify)
+    return await verify_otp(data=otpVerify)

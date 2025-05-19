@@ -1,4 +1,3 @@
-from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,20 +8,17 @@ from app.core.sqlalchemy import close_postgres_connection, init_postgres_models
 from app.routes import router
 
 
-load_dotenv(dotenv_path='.env.development')
+load_dotenv(dotenv_path='.env')
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+app = FastAPI()
+
+
+@app.on_event("startup")
+async def on_startup():
     await init_postgres_models()
     await init_beanie_db()
     await init_redis_pool()
-    yield
-    await close_postgres_connection()
-    await close_beanie_db()
-    await close_redis_pool()
-
-app = FastAPI()
 
 # Allow CORS so frontend can POST
 app.add_middleware(
@@ -34,3 +30,10 @@ app.add_middleware(
 )
 
 app.include_router(router=router)
+
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    await close_postgres_connection()
+    await close_beanie_db()
+    await close_redis_pool()

@@ -12,7 +12,12 @@ def otp_key(profile_id: str) -> str:
 
 async def generate_and_send_otp(profile_id: str, email: str) -> str:
     otp: str = f"{secrets.randbelow(exclusive_upper_bound=1000000):06d}"
-    await get_redis().setex(name=otp_key(profile_id=profile_id), time=OTP_EXPIRE_SECONDS, value=otp)
+    redis = await get_redis()
+    await redis.setex(
+        name=otp_key(profile_id=profile_id),
+        time=OTP_EXPIRE_SECONDS,
+        value=otp
+    )
 
     if email:
         await send_email(to_email=email, subject="Your OTP Code", content=f"Your OTP is: {otp}")

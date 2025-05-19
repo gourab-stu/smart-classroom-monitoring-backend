@@ -1,10 +1,11 @@
+from typing import Union
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.core import MONGO_URI, MONGO_DATABASE_NAME
 from app.database.models.mongodb import *
 
-client: AsyncIOMotorClient | None = None
+client: Union[AsyncIOMotorClient, None] = None
 
 
 async def init_beanie_db() -> None:
@@ -22,7 +23,7 @@ async def init_beanie_db() -> None:
             TeacherProfile
         ]
     )
-    print(f"database connected to {client.HOST} via port {client.PORT}")
+    print(f"database connected to {client.address} via port {client.PORT}")
 
 
 async def close_beanie_db() -> None:

@@ -15,7 +15,7 @@ sqlalchemy[asyncio]
 alembic
 
 # Redis
-aioredis
+redis
 
 # Email & SMS
 aiosmtplib
@@ -26,4 +26,3 @@ fastapi[standard]
 uvicorn[standard]
 
 python-dotenv
-email-validator

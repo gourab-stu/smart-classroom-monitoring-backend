@@ -25,6 +25,7 @@ async_session: async_sessionmaker[AsyncSession] = async_sessionmaker(
 # Dependency for FastAPI routes
 async def get_db_session():
     async with async_session() as session:
+        print(f"postgres session info: {session.info}")
         try:
             yield session
         except SQLAlchemyError:

@@ -9,37 +9,37 @@ class _routine(Base):
     __tablename__: str = "routines"
 
     routine_id = Column(
-        __name_pos=BigInteger,
+        BigInteger,
         primary_key=True,
         nullable=False
     )
     day = Column(
-        __name_pos=String(length=3),
+        String(length=3),
         nullable=False
     )
     teacher_id = Column(
-        __name_pos=BigInteger,
-        __type_pos=ForeignKey(column="teachers.teacher_id"),
+        BigInteger,
+        ForeignKey(column="teachers.teacher_id"),
         nullable=False
     )
     class_id = Column(
-        __name_pos=String(length=30),
+        String(length=30),
         nullable=False
     )
     paper_code = Column(
-        __name_pos=String(length=20),
-        __type_pos=ForeignKey(column="papers.paper_code"),
+        String(length=20),
+        ForeignKey(column="papers.paper_code"),
         nullable=False
     )
     starting_at = Column(
-        __name_pos=Time,
+        Time,
         nullable=False
     )
     ending_at = Column(
-        __name_pos=Time,
+        Time,
         nullable=False
     )
     status = Column(
-        __name_pos=Boolean,
+        Boolean,
         nullable=False
     )

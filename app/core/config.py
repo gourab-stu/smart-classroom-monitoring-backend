@@ -9,6 +9,7 @@ REDIS_PORT: str = str(object=os.getenv(key="REDIS_PORT"))
 REDIS_USERNAME: str = str(object=os.getenv(key="REDIS_USERNAME"))
 REDIS_PASSWORD: str = str(object=os.getenv(key="REDIS_PASSWORD"))
 SMTP_PORT: str = str(object=os.getenv(key="SMTP_PORT"))
+SMTP_HOST: str = str(object=os.getenv(key="SMTP_HOST"))
 SMTP_USERNAME: str = str(object=os.getenv(key="SMTP_USERNAME"))
 SMTP_PASSWORD: str = str(object=os.getenv(key="SMTP_PASSWORD"))
 # TWILIO_ACCOUNT_SID: str

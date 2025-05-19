@@ -31,7 +31,7 @@
 from aiosmtplib import SMTP
 from email.message import EmailMessage
 
-from app.core import SMTP_PASSWORD, SMTP_PORT, SMTP_USERNAME
+from app.core import SMTP_HOST, SMTP_PASSWORD, SMTP_PORT, SMTP_USERNAME
 
 
 async def send_email(to_email: str, subject: str, content: str):
@@ -41,6 +41,6 @@ async def send_email(to_email: str, subject: str, content: str):
     message["Subject"] = subject
     message.set_content(content)
 
-    async with SMTP(hostname=SMTP_USERNAME, port=int(SMTP_PORT), start_tls=True) as smtp:
+    async with SMTP(hostname=SMTP_HOST, port=int(SMTP_PORT), start_tls=True) as smtp:
         await smtp.login(SMTP_USERNAME, SMTP_PASSWORD)
         await smtp.send_message(message)
