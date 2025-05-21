@@ -1,31 +1,50 @@
+from typing import Union
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
-from app.core import POSTGRES_URI
+from app.core.config import settings
 
 
 Base = declarative_base()
 
-# Create the async engine
-engine: AsyncEngine = create_async_engine(
-    url=POSTGRES_URI,  # e.g. "postgresql+asyncpg://user:pass@localhost/db"
-    echo=False,
-    future=True
-)
-
-# Create an async session factory
-async_session: async_sessionmaker[AsyncSession] = async_sessionmaker(
-    bind=engine,
-    expire_on_commit=False,
-    class_=AsyncSession
-)
+engine: Union[AsyncEngine, None] = None
+async_session: Union[async_sessionmaker[AsyncSession], None] = None
 
 
-# Dependency for FastAPI routes
+async def init_postgres_db() -> None:
+    global engine, async_session
+
+    engine = create_async_engine(
+        url=settings.POSTGRES_URI,
+        echo=False,
+        future=True,
+    )
+
+    async_session = async_sessionmaker(
+        bind=engine,
+        expire_on_commit=False,
+        class_=AsyncSession,
+    )
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    print("✅ PostgreSQL connected and tables created successfully.")
+
+
+async def close_postgres_db() -> None:
+    global engine
+    if engine:
+        await engine.dispose()
+
+
 async def get_db_session():
+    if async_session is None:
+        raise RuntimeError(
+            "Database not initialized. Call init_postgres_db first.")
+
     async with async_session() as session:
-        print(f"postgres session info: {session.info}")
         try:
             yield session
         except SQLAlchemyError:
@@ -33,22 +52,3 @@ async def get_db_session():
             raise
         finally:
             await session.close()
-
-
-# Called at app startup to create tables
-async def init_postgres_models():
-    import app.database.models.postgresql  # Ensure all models are registered
-    async with engine.begin() as conn:
-        await conn.run_sync(fn=Base.metadata.create_all)
-
-
-# Called at app shutdown to close connection
-async def close_postgres_connection():
-    await engine.dispose()
-
-
-__all__ = [
-    "get_db_session",
-    "init_postgres_models",
-    "close_postgres_connection"
-]

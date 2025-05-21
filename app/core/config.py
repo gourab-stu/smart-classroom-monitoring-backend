@@ -1,20 +1,27 @@
-import os
+from pydantic.v1 import BaseSettings
 
 
-POSTGRES_URI: str = str(object=os.getenv(key="POSTGRES_URI"))
-MONGO_URI: str = str(object=os.getenv(key="MONGO_URI"))
-MONGO_DATABASE_NAME: str = str(object=os.getenv(key="MONGO_DATABASE_NAME"))
-REDIS_HOST: str = str(object=os.getenv(key="REDIS_HOST"))
-REDIS_PORT: str = str(object=os.getenv(key="REDIS_PORT"))
-REDIS_USERNAME: str = str(object=os.getenv(key="REDIS_USERNAME"))
-REDIS_PASSWORD: str = str(object=os.getenv(key="REDIS_PASSWORD"))
-SMTP_PORT: str = str(object=os.getenv(key="SMTP_PORT"))
-SMTP_HOST: str = str(object=os.getenv(key="SMTP_HOST"))
-SMTP_USERNAME: str = str(object=os.getenv(key="SMTP_USERNAME"))
-SMTP_PASSWORD: str = str(object=os.getenv(key="SMTP_PASSWORD"))
-# TWILIO_ACCOUNT_SID: str
-# TWILIO_AUTH_TOKEN: str
-# TWILIO_PHONE_NUMBER: str
-# OTP_EXPIRY_SECONDS: int = 300
-# JWT_SECRET_KEY: str
-# JWT_ALGORITHM: str = "HS256"
+class Settings(BaseSettings):
+    POSTGRES_URI: str = ""
+    MONGO_URI: str = ""
+    MONGO_DATABASE_NAME: str = ""
+    REDIS_HOST: str = ""
+    REDIS_PORT: str = ""
+    REDIS_USERNAME: str = ""
+    REDIS_PASSWORD: str = ""
+    SMTP_HOST: str = ""
+    SMTP_PORT: str = ""
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    OTP_EXPIRY_SECONDS: int = 300
+    # TWILIO_ACCOUNT_SID: str
+    # TWILIO_AUTH_TOKEN: str
+    # TWILIO_PHONE_NUMBER: str
+    # JWT_SECRET_KEY: str
+    # JWT_ALGORITHM: str = "HS256"
+
+    class Config:
+        env_file: str = ".env.local"
+
+
+settings = Settings()

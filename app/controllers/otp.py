@@ -1,14 +1,16 @@
+from fastapi import HTTPException, status
 from redis.asyncio import Redis
 from sqlalchemy import select
-from app.database.models.postgresql import Student
-from app.schemas.auth import OTPRequestSchema, OTPVerifySchema
-from app.core.sqlalchemy import async_session
-from app.services.otp import generate_and_send_otp, otp_key
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.redis import get_redis
-from fastapi import HTTPException, status
+from app.core.sqlalchemy import async_session
+from app.database.models.postgresql import Student
+from app.database.models.redis import OTP
+from app.schemas.auth import OTPRequestSchema, OTPVerifySchema
+from app.services.otp import generate_and_send_otp
 
 
-async def request_otp(data: OTPRequestSchema):
+async def request_otp(data: OTPRequestSchema, db: AsyncSession):
     async with async_session() as session:
         result = await session.execute(statement=select(Student).where(Student.email == data.email))
         student = result.scalars().first()
@@ -23,7 +25,7 @@ async def request_otp(data: OTPRequestSchema):
 
 async def verify_otp(data: OTPVerifySchema):
     redis: Redis = await get_redis()
-    key: str = otp_key(profile_id=data.email)
+    key: str = OTP.get_key(is_profile_id=True, profile_id=data.email)
     stored_otp = await redis.get(name=key)
 
     if not stored_otp:
@@ -34,5 +36,5 @@ async def verify_otp(data: OTPVerifySchema):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid OTP")
 
-    await redis.delete(key)  # Invalidate OTP after successful verification
+    await redis.delete(key)
     return {"verified": True, "message": "OTP verified successfully"}

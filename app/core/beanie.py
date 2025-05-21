@@ -2,7 +2,7 @@ from typing import Union
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from app.core import MONGO_URI, MONGO_DATABASE_NAME
+from app.core.config import settings
 from app.database.models.mongodb import *
 
 client: Union[AsyncIOMotorClient, None] = None
@@ -10,9 +10,9 @@ client: Union[AsyncIOMotorClient, None] = None
 
 async def init_beanie_db() -> None:
     global client
-    client = AsyncIOMotorClient(host=MONGO_URI)
+    client = AsyncIOMotorClient(host=settings.MONGO_URI)
     await init_beanie(
-        database=client[str(object=MONGO_DATABASE_NAME)],
+        database=client[str(object=settings.MONGO_DATABASE_NAME)],
         document_models=[
             Assignment,
             Class,
@@ -23,16 +23,10 @@ async def init_beanie_db() -> None:
             TeacherProfile
         ]
     )
-    print(f"database connected to {client.address} via port {client.PORT}")
+    print("✅ MongoDB connected successfully.")
 
 
 async def close_beanie_db() -> None:
     global client
     if client:
         client.close()
-
-
-__all__ = [
-    "init_beanie_db",
-    "close_beanie_db"
-]

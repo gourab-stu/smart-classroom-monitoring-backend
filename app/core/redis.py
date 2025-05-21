@@ -1,18 +1,18 @@
 from typing import Union
 from redis.asyncio import Redis
 
-from app.core import REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USERNAME
+from app.core.config import settings
 
 redis_client: Union[Redis, None] = None
 
 
 async def init_redis_pool():
     global redis_client
-    redis_client = await Redis(
-        host=REDIS_HOST,
-        port=int(REDIS_PORT),
-        username=REDIS_USERNAME,
-        password=REDIS_PASSWORD,
+    redis_client = Redis(
+        host=settings.REDIS_HOST,
+        port=int(settings.REDIS_PORT),
+        username=settings.REDIS_USERNAME,
+        password=settings.REDIS_PASSWORD,
         decode_responses=True
     )
     try:
