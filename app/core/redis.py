@@ -29,6 +29,7 @@ async def close_redis_pool():
 
 
 def get_redis() -> Redis:
+    # print("getting redis client")
     global redis_client
     if redis_client is None:
         raise RuntimeError("Redis client not initialized")

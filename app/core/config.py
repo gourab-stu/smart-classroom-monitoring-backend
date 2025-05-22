@@ -1,3 +1,4 @@
+import os
 from pydantic.v1 import BaseSettings
 
 
@@ -21,7 +22,7 @@ class Settings(BaseSettings):
     # JWT_ALGORITHM: str = "HS256"
 
     class Config:
-        env_file: str = ".env.local"
+        env_file: str = f".env.{'local' if os.getenv('ENV') == 'local' else 'development' if os.getenv('ENV') == 'development' else 'production'}"
 
 
 settings = Settings()

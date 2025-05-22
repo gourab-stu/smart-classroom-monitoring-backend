@@ -1,12 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.controllers.otp import request_otp, verify_otp
 from app.core.sqlalchemy import get_db_session
-from app.database.models.postgresql import Student
 from app.schemas.auth import OTPRequestSchema, OTPVerifySchema
-from app.services.otp import generate_and_send_otp
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -14,21 +12,57 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post(path="/request-otp")
 async def request_otp_endpoint(otpReq: OTPRequestSchema, db: AsyncSession = Depends(get_db_session)):
-    # data = await req.json()
+    try:
+        result: bool = await request_otp(otpReq, db)
+        await db.close()
 
-    result = await db.execute(select(Student).where(Student.email == otpReq.email))
-    student = result.scalars().first()
+        if not result:
+            return JSONResponse(
+                content={
+                    "success": False,
+                    "message": "User not found"
+                },
+                status_code=status.HTTP_404_NOT_FOUND
+            )
 
-    if not student:
+        return JSONResponse(
+            content={
+                "success": True,
+                "message": "OTP sent successfully"
+            },
+            status_code=status.HTTP_200_OK
+        )
+    except:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
-
-    await generate_and_send_otp(profile_id=otpReq.email, email=otpReq.email)
-    return {"success": True, "message": "OTP sent successfully"}
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong"
+        )
 
 
 @router.post(path="/verify-otp")
-async def verify_otp_endpoint(req: Request, db: AsyncSession = Depends(get_db_session)):
-    data = await req.json()
-    otpVerify = OTPVerifySchema(email=data['email'], otp=data['otp'])
-    return await verify_otp(data=otpVerify)
+async def verify_otp_endpoint(otpVerify: OTPVerifySchema, db: AsyncSession = Depends(get_db_session)):
+    try:
+        result: bool = await verify_otp(otpVerify)
+        await db.close()
+
+        if not result:
+            return JSONResponse(
+                content={
+                    "success": False,
+                    "message": "Invalid OTP"
+                },
+                status_code=status.HTTP_401_UNAUTHORIZED
+            )
+
+        return JSONResponse(
+            content={
+                "success": True,
+                "message": "OTP verification successful"
+            },
+            status_code=status.HTTP_200_OK
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong"
+        )
