@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.middlewares.error import ErrorMiddleware
-from app.routes import router
+from app.routes import auth
 from app.utilities.startup_and_shutdown import start_all, stop_all
 
 
@@ -14,7 +13,6 @@ async def on_startup():
     await start_all()
 
 
-app.add_middleware(ErrorMiddleware)
 app.add_middleware(
     middleware_class=CORSMiddleware,
     allow_origins=["*"],
@@ -23,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
+app.include_router(auth.router)
 
 
 @app.on_event("shutdown")

@@ -8,3 +8,7 @@ class OTPRequestSchema(BaseModel):
 class OTPVerifySchema(BaseModel):
     email: EmailStr
     otp: str
+
+
+class StudentInfoSchema(BaseModel):
+    reg_no: str

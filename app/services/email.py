@@ -12,7 +12,9 @@ async def send_email(to_email: str, subject: str, content: str):
     message["Subject"] = subject
     message.set_content(content)
 
-    async with SMTP(hostname=settings.SMTP_HOST, port=int(settings.SMTP_PORT), start_tls=True) as smtp:
+    async with SMTP(
+        hostname=settings.SMTP_HOST, port=settings.SMTP_PORT, start_tls=True
+    ) as smtp:
         await smtp.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
         await smtp.send_message(message)
         smtp.close()

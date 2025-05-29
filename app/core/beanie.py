@@ -3,7 +3,8 @@ from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.core.config import settings
-from app.database.models.mongodb import *
+from app.database.models.mongodb import FaceEncoding, AssignmentChatbox
+
 
 client: Union[AsyncIOMotorClient, None] = None
 
@@ -13,15 +14,7 @@ async def init_beanie_db() -> None:
     client = AsyncIOMotorClient(host=settings.MONGO_URI)
     await init_beanie(
         database=client[str(object=settings.MONGO_DATABASE_NAME)],
-        document_models=[
-            Assignment,
-            Class,
-            FaceEncoding,
-            Lecture,
-            StudentProfile,
-            Submission,
-            TeacherProfile
-        ]
+        document_models=[AssignmentChatbox, FaceEncoding],
     )
     print("✅ MongoDB connected successfully.")
 

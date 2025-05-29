@@ -1,6 +1,11 @@
 from typing import Union
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import declarative_base
 
 from app.core.config import settings
@@ -41,8 +46,7 @@ async def close_postgres_db() -> None:
 
 async def get_db_session():
     if async_session is None:
-        raise RuntimeError(
-            "Database not initialized. Call init_postgres_db first.")
+        raise RuntimeError("Database not initialized. Call init_postgres_db first.")
 
     async with async_session() as session:
         try:

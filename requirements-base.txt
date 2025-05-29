@@ -1,0 +1,9 @@
+opencv-python
+face_recognition
+asyncpg
+sqlalchemy[asyncio]
+beanie
+redis
+alembic
+aiosmtplib
+fastapi[all]

@@ -1,4 +1,5 @@
 import secrets
+
 # from app.core.config import settings
 # from app.core.redis import get_redis
 from app.database.models.redis import OTP

@@ -10,10 +10,10 @@ async def init_redis_pool():
     global redis_client
     redis_client = Redis(
         host=settings.REDIS_HOST,
-        port=int(settings.REDIS_PORT),
+        port=settings.REDIS_PORT,
         username=settings.REDIS_USERNAME,
         password=settings.REDIS_PASSWORD,
-        decode_responses=True
+        decode_responses=True,
     )
     try:
         await redis_client.ping()
