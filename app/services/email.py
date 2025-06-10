@@ -1,11 +1,17 @@
 from aiosmtplib import SMTP
 from email.message import EmailMessage
 
-from app.core.config import settings
+from app.core.config import get_settings
 
 
-async def send_email(to_email: str, subject: str, content: str):
-    # print("sending email")
+settings = get_settings()
+
+
+async def send_email(
+    to_email: str,
+    subject: str,
+    content: str,
+):
     message = EmailMessage()
     message["From"] = settings.SMTP_USERNAME
     message["To"] = to_email

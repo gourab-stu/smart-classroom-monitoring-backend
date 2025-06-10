@@ -6,15 +6,14 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.orm import declarative_base
 
-from app.core.config import settings
+from app.core.config import get_settings
+from app.database.models.postgresql import Base
 
-
-Base = declarative_base()
 
 engine: Union[AsyncEngine, None] = None
 async_session: Union[async_sessionmaker[AsyncSession], None] = None
+settings = get_settings()
 
 
 async def init_postgres_db() -> None:
@@ -44,8 +43,8 @@ async def close_postgres_db() -> None:
         await engine.dispose()
 
 
-async def get_db_session():
-    if async_session is None:
+async def get_postgres_session():
+    if not async_session:
         raise RuntimeError("Database not initialized. Call init_postgres_db first.")
 
     async with async_session() as session:

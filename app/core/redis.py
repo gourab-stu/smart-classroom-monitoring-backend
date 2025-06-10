@@ -1,9 +1,10 @@
 from typing import Union
 from redis.asyncio import Redis
 
-from app.core.config import settings
+from app.core.config import get_settings
 
 redis_client: Union[Redis, None] = None
+settings = get_settings()
 
 
 async def init_redis_pool():
@@ -28,8 +29,7 @@ async def close_redis_pool():
         await redis_client.close()
 
 
-def get_redis() -> Redis:
-    # print("getting redis client")
+def get_redis_client():
     global redis_client
     if redis_client is None:
         raise RuntimeError("Redis client not initialized")

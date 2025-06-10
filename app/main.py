@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import auth
+from app.api.v1 import auth
 from app.utilities.startup_and_shutdown import start_all, stop_all
 
 
@@ -21,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router)
+app.include_router(auth.router, prefix="/api/v1")
 
 
 @app.on_event("shutdown")

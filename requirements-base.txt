@@ -4,6 +4,7 @@ asyncpg
 sqlalchemy[asyncio]
 beanie
 redis
-alembic
 aiosmtplib
-fastapi[all]
+fastapi[standard]
+pyjwt[crypto]
+pydantic-settings
