@@ -1,8 +1,8 @@
-from aiosmtplib import SMTP
 from email.message import EmailMessage
 
-from app.core.config import get_settings
+from aiosmtplib import SMTP
 
+from app.core.config import get_settings
 
 settings = get_settings()
 

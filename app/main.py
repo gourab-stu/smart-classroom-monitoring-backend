@@ -1,16 +1,22 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
 
-from app.api.v1 import auth
+from app.api.v1 import assignments, auth
 from app.utilities.startup_and_shutdown import start_all, stop_all
 
 
-app = FastAPI()
-
-
-@app.on_event("startup")
-async def on_startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     await start_all()
+    logger.info("FastAPI app started.")
+    yield
+    await stop_all()
+    logger.info("FastAPI app shutdown.")
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 app.add_middleware(
@@ -22,8 +28,4 @@ app.add_middleware(
 )
 
 app.include_router(auth.router, prefix="/api/v1")
-
-
-@app.on_event("shutdown")
-async def on_shutdown():
-    await stop_all()
+app.include_router(assignments.router, prefix="/api/v1")

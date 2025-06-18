@@ -1,4 +1,6 @@
 from typing import Union
+
+from loguru import logger
 from redis.asyncio import Redis
 
 from app.core.config import get_settings
@@ -18,9 +20,9 @@ async def init_redis_pool():
     )
     try:
         await redis_client.ping()
-        print("✅ Redis connected successfully.")
+        logger.info("✅ Redis connected successfully.")
     except Exception as e:
-        print(f"❌ Redis connection failed: {e}")
+        logger.error(f"❌ Redis connection failed: {e}")
 
 
 async def close_redis_pool():

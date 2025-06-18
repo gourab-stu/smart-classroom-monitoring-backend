@@ -1,6 +1,9 @@
-from datetime import datetime, date, time
+from datetime import date, datetime, time
 from typing import List, Optional
+
 from sqlalchemy import (
+    TIMESTAMP,
+    BigInteger,
     Boolean,
     CheckConstraint,
     Date,
@@ -9,15 +12,12 @@ from sqlalchemy import (
     String,
     Text,
     Time,
-    TIMESTAMP,
     UniqueConstraint,
     func,
-    BigInteger,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from app.core.config import get_settings
-
 
 settings = get_settings()
 
@@ -477,7 +477,7 @@ class Assignment(Base, TimestampMixin):
     teacher_id: Mapped[int] = mapped_column(
         ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False
     )
-    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    title: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
     description: Mapped[Optional[str]] = mapped_column(Text)
     assignment_type: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default="homework"

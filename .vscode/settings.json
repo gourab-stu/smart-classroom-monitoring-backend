@@ -1,0 +1,26 @@
+{
+    "workbench.colorTheme": "Default Dark Modern",
+    "workbench.iconTheme": "material-icon-theme",
+    "window.zoomLevel": -0.5,
+    "editor.fontSize": 13,
+    "editor.fontFamily": "'Noto Sans Mono'",
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "ruff.lint.enable": true,
+    "terminal.integrated.fontSize": 14,
+    "terminal.integrated.fontFamily": "Andale Mono",
+    // "terminal.integrated.defaultProfile.linux": "zsh",
+    "terminal.integrated.defaultProfile.windows": "cmd",
+    "python.analysis.autoImportCompletions": true,
+    // "python.analysis.importFormat": "relative",
+    "python.analysis.showOnlyDirectDependenciesInAutoImport": false,
+    "python.analysis.autoIndent": true,
+    // "python.analysis.inlayHints.callArgumentNames": "all",
+    "editor.codeActionsOnSave": {
+        "source.organizeImports.ruff": "explicit"
+    },
+    "python.analysis.inlayHints.functionReturnTypes": true,
+    "python.analysis.inlayHints.variableTypes": true,
+    "python.analysis.languageServerMode": "default",
+    "python.analysis.typeCheckingMode": "basic",
+}

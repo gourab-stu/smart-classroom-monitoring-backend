@@ -8,3 +8,4 @@ aiosmtplib
 fastapi[standard]
 pyjwt[crypto]
 pydantic-settings
+loguru

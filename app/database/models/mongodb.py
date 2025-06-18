@@ -1,9 +1,10 @@
 # # # # # V1 # # # # #
 
 from datetime import datetime
+from typing import List
+
 from beanie import Document
 from pydantic import Field
-from typing import List
 
 
 class FaceEncoding(Document):

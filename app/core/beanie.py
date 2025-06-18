@@ -1,10 +1,11 @@
 from typing import Union
+
 from beanie import init_beanie
+from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.core.config import get_settings
-from app.database.models.mongodb import FaceEncoding, AssignmentChatbox
-
+from app.database.models.mongodb import AssignmentChatbox, FaceEncoding
 
 client: Union[AsyncIOMotorClient, None] = None
 settings = get_settings()
@@ -12,12 +13,15 @@ settings = get_settings()
 
 async def init_beanie_db() -> None:
     global client
-    client = AsyncIOMotorClient(host=settings.MONGO_URI)
-    await init_beanie(
-        database=client[str(object=settings.MONGO_DATABASE_NAME)],
-        document_models=[AssignmentChatbox, FaceEncoding],
-    )
-    print("✅ MongoDB connected successfully.")
+    try:
+        client = AsyncIOMotorClient(host=settings.MONGO_URI)
+        await init_beanie(
+            database=client[str(object=settings.MONGO_DATABASE_NAME)],
+            document_models=[AssignmentChatbox, FaceEncoding],
+        )
+        logger.info("✅ MongoDB connected successfully.")
+    except Exception:
+        logger.error("❌ MongoDB not connected.")
 
 
 async def close_beanie_db() -> None:

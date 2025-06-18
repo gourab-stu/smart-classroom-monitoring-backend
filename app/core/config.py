@@ -1,6 +1,7 @@
+import os
 from datetime import timedelta
 from functools import lru_cache
-import os
+
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
@@ -25,7 +26,6 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_SECRET: str = ""
     REFRESH_TOKEN_EXPIRY: timedelta = timedelta(days=7)
     JWT_ALGORITHM: str = ""
-    API_KEY: str = ""
 
     @field_validator("REDIS_PORT", "SMTP_PORT", "OTP_EXPIRY_SECONDS", mode="before")
     def convert_to_int(cls, value: str) -> int:
@@ -36,7 +36,8 @@ class Settings(BaseSettings):
         return parse_duration(value)
 
     class Config:
-        env_file: str = f".env.{os.getenv('ENV', 'local')}"
+        env_file = f".env.{os.getenv('ENV', 'local')}"
+        case_sensitive = True
 
 
 @lru_cache()

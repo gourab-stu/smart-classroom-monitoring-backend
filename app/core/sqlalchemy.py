@@ -1,4 +1,6 @@
 from typing import Union
+
+from loguru import logger
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -10,7 +12,6 @@ from sqlalchemy.ext.asyncio import (
 from app.core.config import get_settings
 from app.database.models.postgresql import Base
 
-
 engine: Union[AsyncEngine, None] = None
 async_session: Union[async_sessionmaker[AsyncSession], None] = None
 settings = get_settings()
@@ -19,22 +20,26 @@ settings = get_settings()
 async def init_postgres_db() -> None:
     global engine, async_session
 
-    engine = create_async_engine(
-        url=settings.POSTGRES_URI,
-        echo=False,
-        future=True,
-    )
+    try:
+        engine = create_async_engine(
+            url=settings.POSTGRES_URI,
+            echo=False,
+            future=True,
+        )
 
-    async_session = async_sessionmaker(
-        bind=engine,
-        expire_on_commit=False,
-        class_=AsyncSession,
-    )
+        async_session = async_sessionmaker(
+            bind=engine,
+            expire_on_commit=False,
+            class_=AsyncSession,
+        )
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
-    print("✅ PostgreSQL connected and tables created successfully.")
+        logger.info("✅ PostgreSQL connected and tables created successfully.")
+    except Exception as e:
+        logger.info(e)
+        logger.error("❌ PostgreSQL not connected.")
 
 
 async def close_postgres_db() -> None:
