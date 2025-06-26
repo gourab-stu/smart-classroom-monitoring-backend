@@ -528,15 +528,12 @@ class AssignmentSubmission(Base, TimestampMixin):
     student_id: Mapped[int] = mapped_column(
         ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False
     )
-    submission_text: Mapped[Optional[str]] = mapped_column(Text)
     submitted_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
     )
     status: Mapped[str] = mapped_column(
         String(15), nullable=False, server_default="submitted"
     )
-    feedback: Mapped[Optional[str]] = mapped_column(Text)
-    is_late: Mapped[bool] = mapped_column(Boolean, server_default="false")
 
     # Relationships
     assignment: Mapped["Assignment"] = relationship(
@@ -550,7 +547,7 @@ class AssignmentSubmission(Base, TimestampMixin):
     )
 
     __table_args__ = (
-        CheckConstraint("status IN ('draft', 'submitted', 'returned')"),
+        CheckConstraint("status IN ('submitted', 'returned')"),
         UniqueConstraint("assignment_id", "student_id"),
     )
 
@@ -570,20 +567,14 @@ class SubmissionAttachment(Base, TimestampMixin):
     )
     original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
     stored_filename: Mapped[str] = mapped_column(String(255), nullable=False)
-    file_path: Mapped[str] = mapped_column(Text, nullable=False)
+    file_url: Mapped[Optional[str]] = mapped_column(Text)
     file_size: Mapped[int] = mapped_column(BigInteger, nullable=False)
     mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    file_hash: Mapped[Optional[str]] = mapped_column(String(64))
-    upload_order: Mapped[int] = mapped_column(
-        SmallInteger, nullable=False, server_default="1"
-    )
 
     # Relationships
     submission: Mapped["AssignmentSubmission"] = relationship(
         "AssignmentSubmission", back_populates="attachments"
     )
-
-    __table_args__ = (UniqueConstraint("submission_id", "upload_order"),)
 
     def __repr__(self) -> str:
         return f"<SubmissionAttachment(id={self.attachment_id}, filename='{self.original_filename}')>"

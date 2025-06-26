@@ -4,6 +4,7 @@ asyncpg
 sqlalchemy[asyncio]
 beanie
 redis
+cloudinary
 aiosmtplib
 fastapi[standard]
 pyjwt[crypto]

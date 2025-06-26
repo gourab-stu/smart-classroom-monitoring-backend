@@ -5,7 +5,7 @@ from functools import lru_cache
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
-from app.utilities.parser import parse_duration
+from app.utilities.parser import parse_duration, parse_file_size
 
 
 class Settings(BaseSettings):
@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_SECRET: str = ""
     REFRESH_TOKEN_EXPIRY: timedelta = timedelta(days=7)
     JWT_ALGORITHM: str = ""
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
+    CLOUDINARY_FOLDER: str = ""
+    ALLOWED_FILE_TYPES: list[str] = ["pdf", "jpg", "jpeg"]
+    MAX_FILE_SIZE: int = 10 * 1024 * 1024
 
     @field_validator("REDIS_PORT", "SMTP_PORT", "OTP_EXPIRY_SECONDS", mode="before")
     def convert_to_int(cls, value: str) -> int:
@@ -34,6 +40,10 @@ class Settings(BaseSettings):
     @field_validator("ACCESS_TOKEN_EXPIRY", "REFRESH_TOKEN_EXPIRY", mode="before")
     def convert_to_timedelta(cls, value: str) -> timedelta:
         return parse_duration(value)
+
+    @field_validator("MAX_FILE_SIZE", mode="before")
+    def convert_to_file_size(cls, value: str) -> int:
+        return parse_file_size(value)
 
     class Config:
         env_file = f".env.{os.getenv('ENV', 'local')}"

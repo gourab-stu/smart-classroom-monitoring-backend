@@ -312,15 +312,70 @@ async def delete_assignment_endpoint_dependency(
     return user_id
 
 
+async def add_attachment_to_assignment_endpoint_dependency(
+    db: Annotated[AsyncSession, Depends(get_postgres_session)],
+    authorization: Annotated[str, Header()],
+):
+    data = await role_checker(db, authorization)
+
+    role = data.get("role")
+    # user_id = data.get("user_id")
+
+    if role not in ["super_admin", "student"]:
+        raise authorization_exception
+
+    return data
+
+
+# attachments
+
+
+async def get_attachment_by_attachment_id_endpoint_dependency(
+    db: Annotated[AsyncSession, Depends(get_postgres_session)],
+    authorization: Annotated[str, Header()],
+):
+    data = await role_checker(db, authorization)
+
+    role = data.get("role")
+    # user_id = data.get("user_id")
+
+    if role not in ["super_admin", "teacher", "student"]:
+        raise authorization_exception
+
+    return data
+
+
+async def get_assignment_submissions_endpoint_dependency(
+    db: Annotated[AsyncSession, Depends(get_postgres_session)],
+    authorization: Annotated[str, Header()],
+):
+    data = await role_checker(db, authorization)
+
+    role = data.get("role")
+    # user_id = data.get("user_id")
+
+    if role not in ["super_admin", "teacher"]:
+        raise authorization_exception
+
+    return data
+
+
+# submissions
+
+
+async def get_attachments_of_a_submission_endpoint_dependency(
+    db: Annotated[AsyncSession, Depends(get_postgres_session)],
+    authorization: Annotated[str, Header()],
+):
+    data = await role_checker(db, authorization)
+
+    role = data.get("role")
+    # user_id = data.get("user_id")
+
+    if role not in ["super_admin", "teacher", "student"]:
+        raise authorization_exception
+
+    return data
+
+
 # # dependencies
-
-
-__all__ = [
-    "get_user_from_otp_request",
-    "get_user_from_otp_verify_request",
-    "get_current_user",
-    "get_refresh_token_from_cookie",
-    "list_all_assignments_endpoint_dependency",
-    "create_assignment_endpoint_dependency",
-    "get_assignment_by_id_endpoint_dependency",
-]

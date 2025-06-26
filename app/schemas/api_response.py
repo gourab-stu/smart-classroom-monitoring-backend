@@ -7,7 +7,7 @@ class MessageResponse(BaseSchema):
     content: Optional[Any] = None
     message: str
     success: bool = True
-    links: Optional[dict[str, str]] = None
+    links: Optional[dict[str, dict[str, str]]] = None
 
 
 class ErrorResponse(BaseSchema):

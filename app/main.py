@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from app.api.v1 import assignments, auth
+from app.api.v1 import assignments, attachments, auth, submissions
 from app.utilities.startup_and_shutdown import start_all, stop_all
 
 
@@ -29,3 +30,5 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(assignments.router, prefix="/api/v1")
+app.include_router(attachments.router, prefix="/api/v1")
+app.include_router(submissions.router, prefix="/api/v1")

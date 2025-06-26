@@ -52,8 +52,8 @@ class InterceptHandler(logging.Handler):
         logger.log(level, record.getMessage())
 
 
-# def patch_loggers():
-#     intercept_handler = InterceptHandler()
-#     for name in ("uvicorn", "uvicorn.error", "uvicorn.access", "fastapi"):
-#         logging.getLogger(name).handlers = [intercept_handler]
-#         logging.getLogger(name).setLevel(logging.DEBUG)
+def patch_loggers():
+    intercept_handler = InterceptHandler()
+    for name in ("uvicorn", "uvicorn.error", "uvicorn.access", "fastapi"):
+        logging.getLogger(name).handlers = [intercept_handler]
+        logging.getLogger(name).setLevel(logging.DEBUG)

@@ -84,6 +84,23 @@ assignment_not_found_exception = HTTPException(
     status_code=404, detail="Assignment not found"
 )
 
+filetype_exception = HTTPException(
+    status_code=status.HTTP_400_BAD_REQUEST, detail="File type not supported"
+)
+
+file_size_exceeds_exception = HTTPException(
+    status_code=status.HTTP_400_BAD_REQUEST, detail="File size exceeds 10MB limit"
+)
+
+attachment_not_found_exception = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND, detail="Attachment not found"
+)
+
+no_submissions_found_exception = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail="No submission found for the assignment",
+)
+
 
 __all__ = [
     "server_error_exception",
@@ -104,4 +121,8 @@ __all__ = [
     "invalid_refresh_token_exception",
     "token_refreshing_failure",
     "assignment_not_found_exception",
+    "filetype_exception",
+    "file_size_exceeds_exception",
+    "attachment_not_found_exception",
+    "no_submissions_found_exception",
 ]

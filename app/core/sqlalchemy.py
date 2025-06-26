@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from typing import Union
 
 from loguru import logger
@@ -60,3 +61,9 @@ async def get_postgres_session():
             raise
         finally:
             await session.close()
+
+
+@asynccontextmanager
+async def get_manual_postgres_session():
+    async with async_session() as session:
+        yield session
