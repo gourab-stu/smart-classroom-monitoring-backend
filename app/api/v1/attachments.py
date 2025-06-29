@@ -1,6 +1,6 @@
 # ├── attachments/
-# │   ├── GET /{attachment_id} ===== > get attachment by attachment id ===== > super_admin (all), admin (all), teacher (created), student (assigned to)
-# │   └── DELETE /{attachment_id} == > delete attachment by attachment id == > super_admin, teacher (creator)
+# │   ├── GET /{attachment_id} ===== > get attachment by attachment id ===== > super_admin (all), teacher (created), student (assigned to)
+# │   └── DELETE /{attachment_id} == > delete attachment by attachment id == > super_admin, student (only his/her attachment)
 
 import tempfile
 from pathlib import Path
@@ -13,7 +13,10 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_attachment_by_attachment_id_endpoint_dependency
+from app.api.deps import (
+    delete_attachment_by_id_endpoint_dependency,
+    get_attachment_by_id_endpoint_dependency,
+)
 from app.api.exceptions import (
     attachment_not_found_exception,
     authorization_exception,
@@ -26,7 +29,9 @@ from app.database.models.postgresql import (
     StudentPaper,
     SubmissionAttachment,
 )
-from app.tasks.file_handler import cleanup_temp_file
+from app.schemas.api_response import MessageResponse
+from app.tasks.attachment import delete_assignment_attachment
+from app.tasks.file_handler import delete_file
 
 router = APIRouter(prefix="/attachments", tags=["Attachments"])
 
@@ -34,7 +39,7 @@ router = APIRouter(prefix="/attachments", tags=["Attachments"])
 @router.get("/{attachment_id}", status_code=status.HTTP_200_OK)
 async def get_attachment_by_attachment_id_endpoint(
     attachment_id: int,
-    data: Annotated[dict, Depends(get_attachment_by_attachment_id_endpoint_dependency)],
+    data: Annotated[dict, Depends(get_attachment_by_id_endpoint_dependency)],
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     bg_tasks: BackgroundTasks,
 ):
@@ -92,19 +97,16 @@ async def get_attachment_by_attachment_id_endpoint(
         # if attchment.file_url is not found try to find the file in the static folder
         if not attachment.file_url:
             base_dir = Path(__file__).resolve().parent.parent.parent.parent
-            file_dir = base_dir / "static" / "uploads"
+            file_dir = base_dir / "static" / "uploads" / "attachments"
 
             # search folder for the mentioned file
             for file in file_dir.iterdir():
                 if file.is_file() and file.name.startswith(
-                    f"attachment.{attachment_id}"
+                    f"{attachment.stored_filename}"
                 ):
-                    # add file cleanup task
-                    bg_tasks.add_task(cleanup_temp_file, file.name)
-
                     # Serve file
                     return FileResponse(
-                        path=file.name,
+                        path=file_dir / file.name,
                         filename=f"{attachment.original_filename}",
                         media_type=f"{attachment.mime_type}",
                         headers={
@@ -130,7 +132,7 @@ async def get_attachment_by_attachment_id_endpoint(
             tmp_file.close()
 
             # add file cleanup task
-            bg_tasks.add_task(cleanup_temp_file, tmp_file.name)
+            bg_tasks.add_task(delete_file, tmp_file.name)
 
             # Serve file
             return FileResponse(
@@ -141,6 +143,61 @@ async def get_attachment_by_attachment_id_endpoint(
                     "Content-Disposition": f"inline; filename={attachment.original_filename}"
                 },
             )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(e)
+        logger.error(e.__class__)
+        raise server_error_exception
+
+
+@router.delete(
+    "/{attachment_id}", response_model=MessageResponse, status_code=status.HTTP_200_OK
+)
+async def delete_attachment_by_id_endpoint(
+    attachment_id: int,
+    data: Annotated[dict, Depends(delete_attachment_by_id_endpoint_dependency)],
+    db: Annotated[AsyncSession, Depends(get_postgres_session)],
+    bg_tasks: BackgroundTasks,
+):
+    try:
+        role = data.get("role")
+        user_id = data.get("user_id")
+
+        # fetch attachment based on role
+        if role == "super_admin":
+            stmt = select(SubmissionAttachment).where(
+                SubmissionAttachment.attachment_id == attachment_id
+            )
+        if role == "student":
+            stmt = (
+                select(SubmissionAttachment)
+                .join(
+                    AssignmentSubmission,
+                    SubmissionAttachment.submission_id
+                    == AssignmentSubmission.submission_id,
+                )
+                .where(AssignmentSubmission.student_id == user_id)
+                .where(SubmissionAttachment.attachment_id == attachment_id)
+            )
+
+        result = await db.execute(stmt)
+        attachment = result.scalar_one_or_none()
+
+        # if no attachment found send not found exception
+        if not attachment:
+            raise (
+                attachment_not_found_exception
+                if role == "super_admin"
+                else authorization_exception
+            )
+
+        # add background task to remove assignment
+        bg_tasks.add_task(delete_assignment_attachment, attachment.attachment_id)
+
+        return MessageResponse(
+            message=f"Attachment {attachment.original_filename} deleted"
+        )
     except HTTPException:
         raise
     except Exception as e:

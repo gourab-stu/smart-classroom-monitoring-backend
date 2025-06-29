@@ -11,7 +11,7 @@ settings = get_settings()
 
 
 async def upload_to_cloudinary(
-    file_content: bytes, folder: str = "assignments", public_id: Optional[str] = None
+    file_content: bytes, folder: str, public_id: Optional[str] = None
 ) -> str:
     try:
         if len(file_content) > settings.MAX_FILE_SIZE:
@@ -37,3 +37,14 @@ async def upload_to_cloudinary(
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail="Upload failed")
+
+
+async def delete_from_cloudinary(public_id: str) -> bool:
+    try:
+        result = cloudinary.uploader.destroy(public_id)
+        if result.get("result") == "ok":
+            return True
+        else:
+            return False
+    except Exception as e:
+        raise e

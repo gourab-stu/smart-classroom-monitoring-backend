@@ -303,7 +303,7 @@ async def add_attachment_to_assignment_endpoint(
 
         # Generate unique file_id
         base_dir = Path(__file__).resolve().parent.parent.parent.parent  # ./app/api/v1/
-        upload_dir = base_dir / "static" / "uploads"
+        upload_dir = base_dir / "static" / "uploads" / "attachments"
         upload_dir.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
 
         while True:
@@ -315,7 +315,7 @@ async def add_attachment_to_assignment_endpoint(
                 break  # Found unique file_id
 
         # Write content to disk
-        file_path = upload_dir / f"attachment.{file_id}.{ext}"
+        file_path = upload_dir / f"{file_id}.{ext}"
         with open(file_path, "wb") as f:
             f.write(content)
 
@@ -345,7 +345,7 @@ async def add_attachment_to_assignment_endpoint(
         attachment = SubmissionAttachment(
             submission_id=submission.submission_id,
             original_filename=original_filename,
-            stored_filename=file_id,
+            stored_filename=f"{file_id}.{ext}",
             file_size=file_size,
             mime_type=mime_type,
         )
@@ -358,7 +358,7 @@ async def add_attachment_to_assignment_endpoint(
             upload_assignment_attachment,
             assignment_id=assignment_id,
             attachment_id=attachment.attachment_id,
-            stored_filename=f"attachment.{file_id}.{ext}",
+            stored_filename=attachment.stored_filename,
         )
 
         # send response with uniform interfaces
