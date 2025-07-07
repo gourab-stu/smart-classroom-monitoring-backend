@@ -22,6 +22,7 @@ from app.core.sqlalchemy import get_postgres_session
 from app.database.models.postgresql import User
 from app.schemas.assignment import AssignmentBase, AssignmentCreate
 from app.schemas.otp import OTPRequestSchema, OTPVerifySchema, OTPVerifySchemaExtended
+from app.schemas.user import UserBase, UserCreate
 
 settings = get_settings()
 
@@ -29,9 +30,8 @@ settings = get_settings()
 # # helper methods
 
 
-async def check_auth_header_and_get_user_id(
-    authorization: str,
-    redis: Redis,
+async def check_auth_header_refresh_token_and_get_user_id(
+    authorization: str, redis: Redis, refresh_token: str
 ):
     try:
         # Validate authorization header format
@@ -39,19 +39,26 @@ async def check_auth_header_and_get_user_id(
             raise credentials_exception
 
         # Extract token
-        token = authorization[7:].strip()
-        if not token:
+        access_token = authorization[7:].strip()
+        if not access_token:
             raise credentials_exception
 
         # Check if token is blacklisted
-        blacklist_key = f"blacklist:{token}"
+        blacklist_key = f"blacklist:{access_token}"
         if await redis.exists(blacklist_key):
             raise revoke_token_exception
 
         # Decode token
         try:
-            payload: dict = jwt.decode(
-                token, settings.ACCESS_TOKEN_SECRET, algorithms=[settings.JWT_ALGORITHM]
+            access_payload: dict = jwt.decode(
+                access_token,
+                settings.ACCESS_TOKEN_SECRET,
+                algorithms=[settings.JWT_ALGORITHM],
+            )
+            refresh_payload: dict = jwt.decode(
+                refresh_token,
+                settings.REFRESH_TOKEN_SECRET,
+                algorithms=[settings.JWT_ALGORITHM],
             )
         except jwt.PyJWTError as e:
             logger.error(e)
@@ -59,12 +66,21 @@ async def check_auth_header_and_get_user_id(
             raise credentials_exception
 
         # Validate token type
-        if payload.get("type") != "access":
+        if access_payload.get("type") != "access":
+            raise credentials_exception
+        if refresh_payload.get("type") != "refresh":
             raise credentials_exception
 
         # Extract user ID
-        user_id = payload.get("sub")
+        user_id = access_payload.get("sub")
         if not user_id:
+            raise credentials_exception
+        another_user_id = refresh_payload.get("sub")
+        if not another_user_id:
+            raise credentials_exception
+
+        # Validate if user ID from access and refresh token
+        if user_id != another_user_id:
             raise credentials_exception
 
         return user_id
@@ -76,12 +92,14 @@ async def check_auth_header_and_get_user_id(
         raise server_error_exception
 
 
-async def role_checker(db: AsyncSession, authorization: str):
+async def role_checker(db: AsyncSession, authorization: str, refresh_token: str):
     """Dependency to check the role of the current user using JWT token"""
 
     try:
         redis = get_redis_client()
-        user_id = await check_auth_header_and_get_user_id(authorization, redis)
+        user_id = await check_auth_header_refresh_token_and_get_user_id(
+            authorization, redis, refresh_token
+        )
 
         # Fetch role from database
         stmt = text("""
@@ -124,7 +142,7 @@ async def role_checker(db: AsyncSession, authorization: str):
 # auth
 
 
-async def get_user_from_otp_request(
+async def request_otp_endpoint_dependency(
     otpReq: OTPRequestSchema,
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     refresh_token: Optional[str] = Cookie(default=None),
@@ -154,7 +172,7 @@ async def get_user_from_otp_request(
         raise server_error_exception
 
 
-async def get_user_from_otp_verify_request(
+async def verify_otp_endpoint_dependency(
     otpVerify: OTPVerifySchema,
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     refresh_token: Optional[str] = Cookie(default=None),
@@ -185,14 +203,17 @@ async def get_user_from_otp_verify_request(
         raise server_error_exception
 
 
-async def get_current_user(
+async def logout_endpoint_dependency(
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
     redis: Annotated[Redis, Depends(get_redis_client)],
 ) -> User:
     """Dependency to get current user from JWT token"""
 
-    user_id = await check_auth_header_and_get_user_id(authorization, redis)
+    user_id = await check_auth_header_refresh_token_and_get_user_id(
+        authorization, redis, refresh_token
+    )
 
     try:
         # Fetch user from database
@@ -213,7 +234,7 @@ async def get_current_user(
         raise server_error_exception
 
 
-async def get_refresh_token_from_cookie(request: Request):
+async def refresh_token_endpoint_dependency(request: Request):
     """Extract refresh token from HTTP-only cookie"""
     token = request.cookies.get("refresh_token")
     if not token:
@@ -227,8 +248,9 @@ async def get_refresh_token_from_cookie(request: Request):
 async def list_all_assignments_endpoint_dependency(
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
 ):
-    data = await role_checker(db, authorization)
+    data = await role_checker(db, authorization, refresh_token)
 
     role = data.get("role")
     # user_id = data.get("user_id")
@@ -243,8 +265,9 @@ async def create_assignment_endpoint_dependency(
     baseAssignment: AssignmentBase,
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
 ):
-    data = await role_checker(db, authorization)
+    data = await role_checker(db, authorization, refresh_token)
 
     role = str(data.get("role"))
     user_id = str(data.get("user_id"))
@@ -270,8 +293,9 @@ async def create_assignment_endpoint_dependency(
 async def get_assignment_by_id_endpoint_dependency(
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
 ):
-    data = await role_checker(db, authorization)
+    data = await role_checker(db, authorization, refresh_token)
 
     role = data.get("role")
     # user_id = data.get("user_id")
@@ -285,23 +309,25 @@ async def get_assignment_by_id_endpoint_dependency(
 async def update_assignment_endpoint_dependency(
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
 ):
-    data = await role_checker(db, authorization)
+    data = await role_checker(db, authorization, refresh_token)
 
     role = data.get("role")
-    user_id = data.get("user_id")
+    # user_id = data.get("user_id")
 
     if role not in ["super_admin", "teacher"]:
         raise authorization_exception
 
-    return user_id
+    return data
 
 
 async def delete_assignment_endpoint_dependency(
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
 ):
-    data = await role_checker(db, authorization)
+    data = await role_checker(db, authorization, refresh_token)
 
     role = data.get("role")
     user_id = data.get("user_id")
@@ -315,8 +341,9 @@ async def delete_assignment_endpoint_dependency(
 async def add_attachment_to_assignment_endpoint_dependency(
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
 ):
-    data = await role_checker(db, authorization)
+    data = await role_checker(db, authorization, refresh_token)
 
     role = data.get("role")
     # user_id = data.get("user_id")
@@ -330,8 +357,9 @@ async def add_attachment_to_assignment_endpoint_dependency(
 async def get_assignment_submissions_endpoint_dependency(
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
 ):
-    data = await role_checker(db, authorization)
+    data = await role_checker(db, authorization, refresh_token)
 
     role = data.get("role")
     # user_id = data.get("user_id")
@@ -348,8 +376,9 @@ async def get_assignment_submissions_endpoint_dependency(
 async def get_attachment_by_id_endpoint_dependency(
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
 ):
-    data = await role_checker(db, authorization)
+    data = await role_checker(db, authorization, refresh_token)
 
     role = data.get("role")
     # user_id = data.get("user_id")
@@ -363,8 +392,9 @@ async def get_attachment_by_id_endpoint_dependency(
 async def delete_attachment_by_id_endpoint_dependency(
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
 ):
-    data = await role_checker(db, authorization)
+    data = await role_checker(db, authorization, refresh_token)
 
     role = data.get("role")
     # user_id = data.get("user_id")
@@ -381,8 +411,9 @@ async def delete_attachment_by_id_endpoint_dependency(
 async def get_attachments_of_a_submission_endpoint_dependency(
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
 ):
-    data = await role_checker(db, authorization)
+    data = await role_checker(db, authorization, refresh_token)
 
     role = data.get("role")
     # user_id = data.get("user_id")
@@ -393,4 +424,101 @@ async def get_attachments_of_a_submission_endpoint_dependency(
     return data
 
 
+# users
+
+
+async def get_me_endpoint_dependency(
+    db: Annotated[AsyncSession, Depends(get_postgres_session)],
+    authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
+):
+    data = await role_checker(db, authorization, refresh_token)
+
+    # role = data.get("role")
+    user_id = data.get("user_id")
+
+    return user_id
+
+
+async def create_user_endpoint_dependency(
+    userBase: UserBase,
+    db: Annotated[AsyncSession, Depends(get_postgres_session)],
+    authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
+):
+    data = await role_checker(db, authorization, refresh_token)
+
+    role = data.get("role")
+    user_id = data.get("user_id")
+
+    if not user_id:
+        raise authorization_exception
+
+    if role not in ["super_admin", "admin"]:
+        raise authorization_exception
+
+    if userBase.role == "super_admin" and role != "super_admin":
+        raise authorization_exception
+
+    # new_user = UserCreate(
+    #     first_name=userBase.first_name,
+    #     middle_name=userBase.middle_name,
+    #     last_name=userBase.last_name,
+    #     email=userBase.email,
+    #     mobile_no=userBase.mobile_no,
+    #     role=userBase.role,
+    #     created_by=int(user_id),
+    # )
+    new_user = UserCreate(**userBase.model_dump(), created_by=int(user_id))
+
+    return new_user
+
+
+async def update_user_by_id_endpoint_deps(
+    db: Annotated[AsyncSession, Depends(get_postgres_session)],
+    authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
+):
+    data = await role_checker(db, authorization, refresh_token)
+
+    role = data.get("role")
+    # user_id = data.get("user_id")
+
+    if role not in ["super_admin", "teacher"]:
+        raise authorization_exception
+
+    return data
+
+
 # # dependencies
+
+
+# users
+
+
+async def get_all_users_endpoint_deps(
+    db: Annotated[AsyncSession, Depends(get_postgres_session)],
+    authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
+):
+    data = await role_checker(db, authorization, refresh_token)
+
+    role = data.get("role")
+    # user_id = data.get("user_id")
+
+    if role not in ["super_admin", "admin"]:
+        raise authorization_exception
+
+
+async def get_user_by_id_endpoint_deps(
+    db: Annotated[AsyncSession, Depends(get_postgres_session)],
+    authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
+):
+    data = await role_checker(db, authorization, refresh_token)
+
+    role = data.get("role")
+    # user_id = data.get("user_id")
+
+    if role not in ["super_admin", "admin", "teacher"]:
+        raise authorization_exception

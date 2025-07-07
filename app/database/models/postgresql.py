@@ -171,6 +171,8 @@ class User(Base, TimestampMixin):
     last_name: Mapped[str] = mapped_column(String(50), nullable=False)
     email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     mobile_no: Mapped[str] = mapped_column(String(15), unique=True, nullable=False)
+    created_by: Mapped[Optional[int]] = mapped_column(ForeignKey("users.user_id"))
+    updated_by: Mapped[Optional[int]] = mapped_column(ForeignKey("users.user_id"))
 
     # Relationships
     user_roles: Mapped[List["UserRole"]] = relationship(

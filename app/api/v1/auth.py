@@ -15,10 +15,10 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import (
-    get_current_user,
-    get_refresh_token_from_cookie,
-    get_user_from_otp_request,
-    get_user_from_otp_verify_request,
+    logout_endpoint_dependency,
+    refresh_token_endpoint_dependency,
+    request_otp_endpoint_dependency,
+    verify_otp_endpoint_dependency,
 )
 from app.api.exceptions import (
     auth_failure_exception,
@@ -37,12 +37,13 @@ from app.core.sqlalchemy import get_postgres_session
 from app.database.models.postgresql import User
 from app.database.models.redis import OTP
 from app.schemas.api_response import MessageResponse
+from app.schemas.link import Link, Links
 from app.schemas.otp import OTPVerifySchemaExtended
 from app.services.email import send_email
 from app.utilities.otp import generate_otp
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
 settings = get_settings()
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post(
@@ -51,7 +52,7 @@ settings = get_settings()
     status_code=status.HTTP_200_OK,
 )
 async def request_otp_endpoint(
-    user: Annotated[User, Depends(get_user_from_otp_request)],
+    user: Annotated[User, Depends(request_otp_endpoint_dependency)],
     redis: Annotated[Redis, Depends(get_redis_client)],
 ):
     """Request OTP for user authentication"""
@@ -91,7 +92,7 @@ async def request_otp_endpoint(
     "/verify-otp", response_model=MessageResponse, status_code=status.HTTP_200_OK
 )
 async def verify_otp_endpoint(
-    data: Annotated[OTPVerifySchemaExtended, Depends(get_user_from_otp_verify_request)],
+    data: Annotated[OTPVerifySchemaExtended, Depends(verify_otp_endpoint_dependency)],
     redis: Annotated[Redis, Depends(get_redis_client)],
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
     response: Response,
@@ -198,6 +199,19 @@ async def verify_otp_endpoint(
             success=True,
             message="OTP verified successfully",
             content={"access_token": access_token},
+            links=Links(
+                me=Link(
+                    url=f"{settings.BASE_URL}/{settings.VERSION}/users/me", method="GET"
+                ),
+                logout=Link(
+                    url=f"{settings.BASE_URL}/{settings.VERSION}/auth/logout",
+                    method="POST",
+                ),
+                refresh_token=Link(
+                    url=f"{settings.BASE_URL}/{settings.VERSION}/auth/refresh-token",
+                    method="POST",
+                ),
+            ),
         )
 
     except Exception as e:
@@ -212,7 +226,7 @@ async def verify_otp_endpoint(
     status_code=status.HTTP_200_OK,
 )
 async def logout_endpoint(
-    user: Annotated[User, Depends(get_current_user)],
+    user: Annotated[User, Depends(logout_endpoint_dependency)],
     redis: Annotated[Redis, Depends(get_redis_client)],
     response: Response,
     authorization: Annotated[str, Header()],
@@ -263,10 +277,9 @@ async def logout_endpoint(
     status_code=status.HTTP_200_OK,
 )
 async def refresh_token_endpoint(
-    refresh_token: Annotated[str, Depends(get_refresh_token_from_cookie)],
+    refresh_token: Annotated[str, Depends(refresh_token_endpoint_dependency)],
     redis: Annotated[Redis, Depends(get_redis_client)],
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
-    response: Response,
 ):
     """Refresh access token using refresh token"""
     try:

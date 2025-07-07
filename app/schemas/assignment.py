@@ -19,7 +19,6 @@ class AssignmentBase(BaseSchema):
 
 class AssignmentCreate(AssignmentBase):
     teacher_id: int
-    pass
 
 
 class AssignmentUpdate(BaseSchema):

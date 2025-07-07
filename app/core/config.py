@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     CLOUDINARY_FOLDER: str = ""
     ALLOWED_FILE_TYPES: list[str] = ["pdf", "jpg", "jpeg"]
     MAX_FILE_SIZE: int = 10 * 1024 * 1024
+    BASE_URL: str = "http://127.0.0.1:8000/api/"
+    VERSION: str = "v1"
 
     @field_validator("REDIS_PORT", "SMTP_PORT", "OTP_EXPIRY_SECONDS", mode="before")
     def convert_to_int(cls, value: str) -> int:

@@ -5,8 +5,8 @@ from redis.asyncio import Redis
 
 from app.core.config import get_settings
 
-redis_client: Union[Redis, None] = None
 settings = get_settings()
+redis_client: Union[Redis, None] = None
 
 
 async def init_redis_pool():

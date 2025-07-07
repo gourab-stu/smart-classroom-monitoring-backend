@@ -13,9 +13,9 @@ from sqlalchemy.ext.asyncio import (
 from app.core.config import get_settings
 from app.database.models.postgresql import Base
 
+settings = get_settings()
 engine: Union[AsyncEngine, None] = None
 async_session: Union[async_sessionmaker[AsyncSession], None] = None
-settings = get_settings()
 
 
 async def init_postgres_db() -> None:

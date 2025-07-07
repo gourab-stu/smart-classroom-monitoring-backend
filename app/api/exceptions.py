@@ -34,7 +34,7 @@ refresh_token_not_found_exception = HTTPException(
 
 authorization_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="You are not authorized to access this resource",
+    detail="You are not authorized to access or modify this resource",
 )
 
 assignment_integrity_exception = HTTPException(
@@ -101,6 +101,24 @@ no_submissions_found_exception = HTTPException(
     detail="No submission found for the assignment",
 )
 
+user_email_integrity_exception = HTTPException(
+    status_code=status.HTTP_409_CONFLICT,
+    detail="Email already exists",
+)
+
+user_mobile_no_integrity_exception = HTTPException(
+    status_code=status.HTTP_409_CONFLICT,
+    detail="Mobile no already exists",
+)
+
+invalid_role_exception = HTTPException(
+    status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid role selected"
+)
+
+elective_papers_missing_exception = HTTPException(
+    status_code=status.HTTP_400_BAD_REQUEST, detail="Elective papers cannot be empty"
+)
+
 
 __all__ = [
     "server_error_exception",
@@ -125,4 +143,8 @@ __all__ = [
     "file_size_exceeds_exception",
     "attachment_not_found_exception",
     "no_submissions_found_exception",
+    "user_email_integrity_exception",
+    "user_mobile_no_integrity_exception",
+    "invalid_role_exception",
+    "elective_papers_missing_exception",
 ]

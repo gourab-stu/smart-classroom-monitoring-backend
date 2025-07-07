@@ -2,12 +2,13 @@ from enum import Enum
 
 from pydantic import BaseModel
 
+
 # Enums
-# class UserRoleEnum(str, Enum):
-#     SUPER_ADMIN = "super_admin"
-#     ADMIN = "admin"
-#     TEACHER = "teacher"
-#     STUDENT = "student"
+class UserRoleEnum(str, Enum):
+    SUPER_ADMIN = "super_admin"
+    ADMIN = "admin"
+    TEACHER = "teacher"
+    STUDENT = "student"
 
 
 # class AttendanceStatusEnum(str, Enum):

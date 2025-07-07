@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from app.api.v1 import assignments, attachments, auth, submissions
+from app.api.v1 import assignments, attachments, auth, submissions, users
 from app.utilities.startup_and_shutdown import start_all, stop_all
 
 
@@ -32,3 +32,4 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(assignments.router, prefix="/api/v1")
 app.include_router(attachments.router, prefix="/api/v1")
 app.include_router(submissions.router, prefix="/api/v1")
+app.include_router(users.router, prefix="/api/v1")

@@ -58,11 +58,12 @@ from app.schemas.assignment import (
     AssignmentResponse,
     AssignmentUpdate,
 )
+from app.schemas.link import Link, Links
 from app.schemas.submission import SubmissionResponse
 from app.tasks.attachment import upload_assignment_attachment
 
-router = APIRouter(prefix="/assignments", tags=["Assignments"])
 settings = get_settings()
+router = APIRouter(prefix="/assignments", tags=["Assignments"])
 
 
 @router.get("/", response_model=MessageResponse, status_code=status.HTTP_200_OK)
@@ -109,9 +110,7 @@ async def create_assignment_endpoint(
         assignment = Assignment(**data.model_dump())
 
         db.add(assignment)
-
         await db.commit()
-
         await db.refresh(assignment)
 
         return MessageResponse(
@@ -182,10 +181,13 @@ async def get_assignment_by_id_endpoint(
 async def update_assignment_endpoint(
     assignment_id: int,
     update_data: AssignmentUpdate,
-    user_id: Annotated[int, Depends(update_assignment_endpoint_dependency)],
+    data: Annotated[dict, Depends(update_assignment_endpoint_dependency)],
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
 ):
     try:
+        role = data.get("role")
+        user_id = data.get("user_id")
+
         stmt = select(Assignment).where(Assignment.assignment_id == assignment_id)
         result = await db.execute(stmt)
         assignment = result.scalar_one_or_none()
@@ -193,7 +195,7 @@ async def update_assignment_endpoint(
         if not assignment:
             raise assignment_not_found_exception
 
-        if assignment.teacher_id != user_id:
+        if role == "teacher" and assignment.teacher_id != user_id:
             raise authorization_exception
 
         update_fields = update_data.model_dump(exclude_unset=True)
@@ -365,16 +367,16 @@ async def add_attachment_to_assignment_endpoint(
         return MessageResponse(
             message="Attachment uploaded successfully.",
             success=True,
-            links={
-                "view": {
-                    "url": f"/attachments/{attachment.attachment_id}",
-                    "method": "GET",
-                },
-                "delete": {
-                    "url": f"/attachments/{attachment.attachment_id}",
-                    "method": "DELETE",
-                },
-            },
+            links=Links(
+                view=Link(
+                    url=f"/attachments/{attachment.attachment_id}",
+                    method="GET",
+                ),
+                delete=Link(
+                    url=f"/attachments/{attachment.attachment_id}",
+                    method="DELETE",
+                ),
+            ),
         )
     except HTTPException:
         raise

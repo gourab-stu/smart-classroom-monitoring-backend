@@ -7,8 +7,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from app.core.config import get_settings
 from app.database.models.mongodb import AssignmentChatbox, FaceEncoding
 
-client: Union[AsyncIOMotorClient, None] = None
 settings = get_settings()
+client: Union[AsyncIOMotorClient, None] = None
 
 
 async def init_beanie_db() -> None:
