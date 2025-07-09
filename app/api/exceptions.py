@@ -28,6 +28,11 @@ revoke_token_exception = HTTPException(
     detail="Token has been revoked",
 )
 
+refresh_token_missing_exception = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Refresh token is missing",
+)
+
 refresh_token_not_found_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token not found"
 )
@@ -84,6 +89,8 @@ assignment_not_found_exception = HTTPException(
     status_code=404, detail="Assignment not found"
 )
 
+paper_not_found_exception = HTTPException(status_code=404, detail="Paper not found")
+
 filetype_exception = HTTPException(
     status_code=status.HTTP_400_BAD_REQUEST, detail="File type not supported"
 )
@@ -127,6 +134,7 @@ __all__ = [
     "usr_not_found_exception",
     "email_empty_exception",
     "revoke_token_exception",
+    "refresh_token_missing_exception",
     "refresh_token_not_found_exception",
     "authorization_exception",
     "assignment_integrity_exception",
@@ -139,6 +147,7 @@ __all__ = [
     "invalid_refresh_token_exception",
     "token_refreshing_failure",
     "assignment_not_found_exception",
+    "paper_not_found_exception",
     "filetype_exception",
     "file_size_exceeds_exception",
     "attachment_not_found_exception",

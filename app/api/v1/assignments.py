@@ -5,7 +5,7 @@
 # │   ├── PATCH /{assignment_id} ============ > update an assignment =================== > super_admin, teacher (creator)
 # │   ├── DELETE /{assignment_id} =========== > delete assignment ====================== > super_admin, teacher (creator)
 # │   ├── POST /{assignment_id}/attachment == > add an attachment to assignment ======== > super_admin, student (assigned to)
-# │   └── GET /{assignment_id}/submissions == > list all submissions of an assignment == > super_admin, teacher (creator)
+# │   └── GET /{assignment_id}/submissions == > list all submissions of an assignment == > super_admin, student (assigned to), teacher (creator)
 
 import uuid
 from pathlib import Path
@@ -400,7 +400,7 @@ async def get_assignment_submissions_endpoint(
         role = data.get("role")
         user_id = data.get("user_id")
 
-        if role == "super_admin":
+        if role in ["super_admin", "admin"]:
             stmt = select(AssignmentSubmission).where(
                 AssignmentSubmission.assignment_id == assignment_id
             )
@@ -414,16 +414,24 @@ async def get_assignment_submissions_endpoint(
                 .where(AssignmentSubmission.assignment_id == assignment_id)
                 .where(Assignment.teacher_id == user_id)
             )
+        if role == "student":
+            stmt = (
+                select(AssignmentSubmission)
+                .join(
+                    Assignment,
+                    AssignmentSubmission.assignment_id == Assignment.assignment_id,
+                )
+                .join(StudentPaper, Assignment.paper_code == StudentPaper.paper_code)
+                .where(StudentPaper.student_id == user_id)
+                .where(AssignmentSubmission.student_id == user_id)
+                .where(AssignmentSubmission.assignment_id == assignment_id)
+            )
 
         result = await db.execute(stmt)
         submissions = result.scalars().fetchall()
 
         if not submissions:
-            raise (
-                no_submissions_found_exception
-                if role == "super_admin"
-                else authorization_exception
-            )
+            raise no_submissions_found_exception
 
         return MessageResponse(
             content=[

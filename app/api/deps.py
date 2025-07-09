@@ -12,6 +12,7 @@ from app.api.exceptions import (
     credentials_exception,
     email_empty_exception,
     logout_exception,
+    refresh_token_missing_exception,
     revoke_token_exception,
     server_error_exception,
     usr_not_found_exception,
@@ -238,7 +239,7 @@ async def refresh_token_endpoint_dependency(request: Request):
     """Extract refresh token from HTTP-only cookie"""
     token = request.cookies.get("refresh_token")
     if not token:
-        raise
+        raise refresh_token_missing_exception
     return token
 
 
@@ -364,7 +365,7 @@ async def get_assignment_submissions_endpoint_dependency(
     role = data.get("role")
     # user_id = data.get("user_id")
 
-    if role not in ["super_admin", "teacher"]:
+    if role not in ["super_admin", "teacher", "student", "admin"]:
         raise authorization_exception
 
     return data
@@ -435,9 +436,9 @@ async def get_me_endpoint_dependency(
     data = await role_checker(db, authorization, refresh_token)
 
     # role = data.get("role")
-    user_id = data.get("user_id")
+    # user_id = data.get("user_id")
 
-    return user_id
+    return data
 
 
 async def create_user_endpoint_dependency(
@@ -490,6 +491,42 @@ async def update_user_by_id_endpoint_deps(
     return data
 
 
+# papers
+
+
+async def get_paper_by_paper_code_endpoint_dependency(
+    db: Annotated[AsyncSession, Depends(get_postgres_session)],
+    authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
+):
+    data = await role_checker(db, authorization, refresh_token)
+
+    role = data.get("role")
+    # user_id = data.get("user_id")
+    if role not in ["super_admin", "admin", "teacher", "student"]:
+        raise authorization_exception
+
+    return data
+
+
+# routines
+
+
+async def get_routine_endpoint_dependency(
+    db: Annotated[AsyncSession, Depends(get_postgres_session)],
+    authorization: Annotated[str, Header()],
+    refresh_token: Annotated[str, Cookie()],
+):
+    data = await role_checker(db, authorization, refresh_token)
+
+    role = data.get("role")
+    # user_id = data.get("user_id")
+    if role not in ["super_admin", "admin", "teacher", "student"]:
+        raise authorization_exception
+
+    return data
+
+
 # # dependencies
 
 
@@ -520,5 +557,5 @@ async def get_user_by_id_endpoint_deps(
     role = data.get("role")
     # user_id = data.get("user_id")
 
-    if role not in ["super_admin", "admin", "teacher"]:
+    if role not in ["super_admin", "admin", "teacher", "student"]:
         raise authorization_exception

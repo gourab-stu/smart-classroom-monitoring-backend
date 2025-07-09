@@ -45,10 +45,13 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 @router.get("/me", response_model=MessageResponse, status_code=status.HTTP_200_OK)
 async def get_me_endpoint(
-    user_id: Annotated[int, Depends(get_me_endpoint_dependency)],
+    data: Annotated[dict, Depends(get_me_endpoint_dependency)],
     db: Annotated[AsyncSession, Depends(get_postgres_session)],
 ):
     try:
+        user_id = data.get("user_id")
+        role = data.get("role")
+
         stmt = text("""
             SELECT u.user_id, u.first_name, u.middle_name, u.last_name, u.email, u.mobile_no, u.created_at, u.updated_at, r.name as role
             FROM users u
@@ -63,8 +66,21 @@ async def get_me_endpoint(
         if not user:
             raise usr_not_found_exception
 
+        model_data = {c: getattr(user, c) for c in user._fields}
+
+        if role == "student":
+            stmt = (
+                select(Paper)
+                .join(StudentPaper, Paper.paper_code == StudentPaper.paper_code)
+                .where(StudentPaper.student_id == user_id)
+            )
+            result = await db.execute(stmt)
+            papers = result.scalars().all()
+            model_data["papers"] = list({paper.paper_title for paper in papers})
+            model_data["semester"] = papers[0].semester
+
         return MessageResponse(
-            content=UserResponse.model_validate(user),
+            content=UserResponse(**model_data),
             message="User fetched successfully",
             success=True,
             links=Links(

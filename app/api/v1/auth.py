@@ -198,7 +198,7 @@ async def verify_otp_endpoint(
         return MessageResponse(
             success=True,
             message="OTP verified successfully",
-            content={"access_token": access_token},
+            content={"access_token": access_token, "role": role},
             links=Links(
                 me=Link(
                     url=f"{settings.BASE_URL}/{settings.VERSION}/users/me", method="GET"

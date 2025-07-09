@@ -141,6 +141,7 @@ class Paper(Base, TimestampMixin):
     paper_title: Mapped[str] = mapped_column(String(200), nullable=False)
     paper_type: Mapped[str] = mapped_column(String(50), nullable=False)
     semester: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    abbreviation: Mapped[Optional[str]] = mapped_column(Text)
 
     # Relationships
     routines: Mapped[List["Routine"]] = relationship(
